@@ -3,12 +3,35 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 
 // ======================================================
+// CONFIG
+// ======================================================
+
+// Все размеры теперь В САНТИМЕТРАХ.
+//
+// 1 единица Three.js = 1 сантиметр.
+
+const truck = {
+    length: 1360,
+    width: 245,
+    height: 270
+};
+
+
+// Пол кузова
+const floorThickness = 10;
+
+
+// Минимальный зазор между грузами
+const cargoGap = 1;
+
+
+// ======================================================
 // SCENE
 // ======================================================
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x222222);
+scene.background = new THREE.Color(0x202020);
 
 
 // ======================================================
@@ -18,43 +41,60 @@ scene.background = new THREE.Color(0x222222);
 const camera = new THREE.PerspectiveCamera(
     45,
     1,
-    0.1,
-    1000
+    1,
+    5000
 );
 
-camera.position.set(22, 18, 25);
+camera.position.set(
+    1600,
+    1200,
+    1800
+);
 
 
 // ======================================================
 // RENDERER
 // ======================================================
 
-const renderer = new THREE.WebGLRenderer({
-    antialias: true
-});
+const container =
+    document.getElementById('scene');
 
-renderer.setPixelRatio(window.devicePixelRatio);
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias: true
+    });
 
-renderer.setSize(
-    document.getElementById('scene').clientWidth,
-    document.getElementById('scene').clientHeight
+renderer.setPixelRatio(
+    window.devicePixelRatio
 );
 
-document.getElementById('scene').appendChild(renderer.domElement);
+renderer.setSize(
+    container.clientWidth,
+    container.clientHeight
+);
+
+container.appendChild(
+    renderer.domElement
+);
 
 
 // ======================================================
 // CONTROLS
 // ======================================================
 
-const controls = new OrbitControls(
-    camera,
-    renderer.domElement
-);
+const controls =
+    new OrbitControls(
+        camera,
+        renderer.domElement
+    );
 
 controls.enableDamping = true;
 
-controls.target.set(0, 2, 0);
+controls.target.set(
+    0,
+    100,
+    0
+);
 
 controls.update();
 
@@ -63,38 +103,46 @@ controls.update();
 // LIGHT
 // ======================================================
 
-const ambientLight = new THREE.AmbientLight(
-    0xffffff,
-    1.5
+const ambientLight =
+    new THREE.AmbientLight(
+        0xffffff,
+        1.5
+    );
+
+scene.add(
+    ambientLight
 );
 
-scene.add(ambientLight);
 
-
-const directionalLight = new THREE.DirectionalLight(
-    0xffffff,
-    2
-);
+const directionalLight =
+    new THREE.DirectionalLight(
+        0xffffff,
+        2
+    );
 
 directionalLight.position.set(
-    10,
-    20,
-    10
+    1000,
+    2000,
+    1000
 );
 
-scene.add(directionalLight);
+scene.add(
+    directionalLight
+);
 
 
 // ======================================================
 // GRID
 // ======================================================
 
-const grid = new THREE.GridHelper(
-    50,
-    50
-);
+const grid =
+    new THREE.GridHelper(
+        3000,
+        60
+    );
 
-grid.position.y = 0;
+grid.position.y =
+    -floorThickness / 2;
 
 scene.add(grid);
 
@@ -103,88 +151,107 @@ scene.add(grid);
 // TRUCK
 // ======================================================
 
-const truckLength = 20;
-const truckWidth = 8;
-const truckHeight = 4;
+const floorGeometry =
+    new THREE.BoxGeometry(
+        truck.length,
+        floorThickness,
+        truck.width
+    );
 
+const floorMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x555555
+    });
 
-// floor
-
-const floorGeometry = new THREE.BoxGeometry(
-    truckLength,
-    0.3,
-    truckWidth
-);
-
-const floorMaterial = new THREE.MeshStandardMaterial({
-    color: 0x555555
-});
-
-const floor = new THREE.Mesh(
-    floorGeometry,
-    floorMaterial
-);
+const floor =
+    new THREE.Mesh(
+        floorGeometry,
+        floorMaterial
+    );
 
 floor.position.y = 0;
 
 scene.add(floor);
 
 
-// left wall
+// ------------------------------------------------------
+// WALLS
+// ------------------------------------------------------
 
-const wallGeometry = new THREE.BoxGeometry(
-    truckLength,
-    truckHeight,
-    0.3
-);
+const wallMaterial =
+    new THREE.MeshStandardMaterial({
+        color: 0x777777,
+        transparent: true,
+        opacity: 0.35
+    });
 
-const wallMaterial = new THREE.MeshStandardMaterial({
-    color: 0x777777
-});
 
-const leftWall = new THREE.Mesh(
-    wallGeometry,
-    wallMaterial
-);
+// left / right
+
+const sideWallGeometry =
+    new THREE.BoxGeometry(
+        truck.length,
+        truck.height,
+        10
+    );
+
+
+const leftWall =
+    new THREE.Mesh(
+        sideWallGeometry,
+        wallMaterial
+    );
 
 leftWall.position.set(
     0,
-    truckHeight / 2,
-    -truckWidth / 2
+    truck.height / 2,
+    -truck.width / 2
 );
 
 scene.add(leftWall);
 
 
-// right wall
+const rightWall =
+    leftWall.clone();
 
-const rightWall = leftWall.clone();
-
-rightWall.position.z = truckWidth / 2;
+rightWall.position.z =
+    truck.width / 2;
 
 scene.add(rightWall);
 
 
-// front wall
+// front / rear
 
-const frontWallGeometry = new THREE.BoxGeometry(
-    0.3,
-    truckHeight,
-    truckWidth
-);
+const endWallGeometry =
+    new THREE.BoxGeometry(
+        10,
+        truck.height,
+        truck.width
+    );
 
-const frontWall = new THREE.Mesh(
-    frontWallGeometry,
-    wallMaterial
-);
+
+const frontWall =
+    new THREE.Mesh(
+        endWallGeometry,
+        wallMaterial
+    );
 
 frontWall.position.set(
-    -truckLength / 2,
-    truckHeight / 2,
+    -truck.length / 2,
+    truck.height / 2,
     0
 );
 
 scene.add(frontWall);
+
+
+const rearWall =
+    frontWall.clone();
+
+rearWall.position.x =
+    truck.length / 2;
+
+scene.add(rearWall);
 
 
 // ======================================================
@@ -199,9 +266,11 @@ let selectedCargo = null;
 
 let dragging = false;
 
-let dragOffset = new THREE.Vector3();
+let dragOffset =
+    new THREE.Vector3();
 
-let lastValidPosition = new THREE.Vector3();
+let lastValidPosition =
+    new THREE.Vector3();
 
 
 // ======================================================
@@ -215,7 +284,8 @@ const cargoColors = [
     0xa855f7,
     0xeab308,
     0xef4444,
-    0x06b6d4
+    0x06b6d4,
+    0xf97316
 ];
 
 
@@ -227,25 +297,29 @@ function createCargo(
     length,
     width,
     height,
-    color,
+    weight = 100,
+    color = null,
     name = null
 ) {
 
     cargoCounter++;
 
+
     const cargo = {
 
         id: cargoCounter,
 
-        name: name || `Груз ${cargoCounter}`,
+        name:
+            name ||
+            `Груз ${cargoCounter}`,
 
-        length: length,
+        length,
 
-        width: width,
+        width,
 
-        height: height,
+        height,
 
-        weight: 100,
+        weight,
 
         canRotate: true,
 
@@ -253,40 +327,54 @@ function createCargo(
 
         rotation: 0,
 
-        color: color,
+        color:
+            color ||
+            cargoColors[
+                (cargoCounter - 1)
+                %
+                cargoColors.length
+            ],
 
-        mesh: null
+        mesh: null,
+
+        packed: true
 
     };
 
 
-    const geometry = new THREE.BoxGeometry(
-        length,
-        height,
-        width
-    );
+    const geometry =
+        new THREE.BoxGeometry(
+            length,
+            height,
+            width
+        );
 
 
-    const material = new THREE.MeshStandardMaterial({
-        color: color
-    });
+    const material =
+        new THREE.MeshStandardMaterial({
+            color: cargo.color
+        });
 
 
-    const mesh = new THREE.Mesh(
-        geometry,
-        material
-    );
+    const mesh =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
 
 
     cargo.mesh = mesh;
 
 
-    mesh.userData.cargo = cargo;
+    mesh.userData.cargo =
+        cargo;
 
 
+    // Начальная позиция
     mesh.position.set(
         0,
-        height / 2 + 0.15,
+        floorThickness +
+        height / 2,
         0
     );
 
@@ -296,146 +384,191 @@ function createCargo(
     scene.add(mesh);
 
 
-    renderCargoList();
-
-    selectCargo(cargo);
-
     return cargo;
 }
 
 
 // ======================================================
-// UPDATE CARGO GEOMETRY
+// UPDATE GEOMETRY
 // ======================================================
 
 function updateCargoGeometry(cargo) {
 
-    const oldGeometry = cargo.mesh.geometry;
+    if (!cargo.mesh) {
+        return;
+    }
 
-    oldGeometry.dispose();
+
+    cargo.mesh.geometry.dispose();
 
 
-    cargo.mesh.geometry = new THREE.BoxGeometry(
-        cargo.length,
-        cargo.height,
-        cargo.width
-    );
+    cargo.mesh.geometry =
+        new THREE.BoxGeometry(
+            cargo.length,
+            cargo.height,
+            cargo.width
+        );
 
 
     cargo.mesh.rotation.y =
-        THREE.MathUtils.degToRad(cargo.rotation);
+        THREE.MathUtils.degToRad(
+            cargo.rotation
+        );
 
-
-    cargo.mesh.position.y =
-        calculateHeight(
-            cargo,
-            cargo.mesh.position.x,
-            cargo.mesh.position.z
-        ) + cargo.height / 2;
 }
 
 
 // ======================================================
-// CARGO LIST
+// LIST
 // ======================================================
 
 function renderCargoList() {
 
     const list =
-        document.getElementById('cargoList');
+        document.getElementById(
+            'cargoList'
+        );
 
     list.innerHTML = '';
 
 
-    cargoes.forEach(cargo => {
+    cargoes.forEach(
+        cargo => {
 
-        const item =
-            document.createElement('div');
+            const item =
+                document.createElement(
+                    'div'
+                );
 
-        item.className = 'cargo-item';
+
+            item.className =
+                'cargo-item';
 
 
-        if (
-            selectedCargo &&
-            selectedCargo.id === cargo.id
-        ) {
-            item.classList.add('selected');
+            if (
+                selectedCargo &&
+                selectedCargo.id === cargo.id
+            ) {
+
+                item.classList.add(
+                    'selected'
+                );
+
+            }
+
+
+            item.innerHTML = `
+
+                <div class="cargo-name">
+                    ${cargo.name}
+                </div>
+
+                <div class="cargo-info">
+
+                    ${cargo.length}
+                    ×
+                    ${cargo.width}
+                    ×
+                    ${cargo.height}
+                    см
+
+                    <br>
+
+                    Вес:
+                    ${cargo.weight}
+                    кг
+
+                    <br>
+
+                    ${cargo.packed
+                        ? '✓ Загружен'
+                        : '⚠ Не загружен'}
+
+                </div>
+
+            `;
+
+
+            item.addEventListener(
+                'click',
+                () => {
+
+                    selectCargo(
+                        cargo
+                    );
+
+                }
+            );
+
+
+            list.appendChild(
+                item
+            );
+
         }
+    );
 
-
-        item.innerHTML = `
-            <div class="cargo-name">
-                ${cargo.name}
-            </div>
-
-            <div class="cargo-info">
-                ${cargo.length} × ${cargo.width} × ${cargo.height}
-                см
-                <br>
-                Вес: ${cargo.weight} кг
-            </div>
-        `;
-
-
-        item.addEventListener(
-            'click',
-            () => selectCargo(cargo)
-        );
-
-
-        list.appendChild(item);
-
-    });
 }
 
 
 // ======================================================
-// SELECT CARGO
+// SELECT
 // ======================================================
 
 function selectCargo(cargo) {
 
-    selectedCargo = cargo;
+    selectedCargo =
+        cargo;
 
 
-    document.getElementById(
-        'cargoProperties'
-    ).classList.remove('hidden');
+    document
+        .getElementById(
+            'cargoProperties'
+        )
+        .classList
+        .remove('hidden');
 
 
     document.getElementById(
         'cargoName'
-    ).value = cargo.name;
+    ).value =
+        cargo.name;
 
 
     document.getElementById(
         'cargoLength'
-    ).value = cargo.length;
+    ).value =
+        cargo.length;
 
 
     document.getElementById(
         'cargoWidth'
-    ).value = cargo.width;
+    ).value =
+        cargo.width;
 
 
     document.getElementById(
         'cargoHeight'
-    ).value = cargo.height;
+    ).value =
+        cargo.height;
 
 
     document.getElementById(
         'cargoWeight'
-    ).value = cargo.weight;
+    ).value =
+        cargo.weight;
 
 
     document.getElementById(
         'cargoCanStack'
-    ).checked = cargo.canStack;
+    ).checked =
+        cargo.canStack;
 
 
     document.getElementById(
         'cargoCanRotate'
-    ).checked = cargo.canRotate;
+    ).checked =
+        cargo.canRotate;
 
 
     renderCargoList();
@@ -444,7 +577,7 @@ function selectCargo(cargo) {
 
 
 // ======================================================
-// PROPERTY INPUTS
+// PROPERTY EVENTS
 // ======================================================
 
 document.getElementById(
@@ -453,9 +586,12 @@ document.getElementById(
     'input',
     function () {
 
-        if (!selectedCargo) return;
+        if (!selectedCargo) {
+            return;
+        }
 
-        selectedCargo.name = this.value;
+        selectedCargo.name =
+            this.value;
 
         renderCargoList();
 
@@ -469,15 +605,27 @@ document.getElementById(
     'change',
     function () {
 
-        if (!selectedCargo) return;
+        if (!selectedCargo) {
+            return;
+        }
 
-        const value = Number(this.value);
+        const value =
+            Number(this.value);
 
-        if (value <= 0) return;
 
-        selectedCargo.length = value;
+        if (value <= 0) {
+            return;
+        }
 
-        updateCargoGeometry(selectedCargo);
+
+        selectedCargo.length =
+            value;
+
+
+        updateCargoGeometry(
+            selectedCargo
+        );
+
 
         renderCargoList();
 
@@ -491,15 +639,27 @@ document.getElementById(
     'change',
     function () {
 
-        if (!selectedCargo) return;
+        if (!selectedCargo) {
+            return;
+        }
 
-        const value = Number(this.value);
+        const value =
+            Number(this.value);
 
-        if (value <= 0) return;
 
-        selectedCargo.width = value;
+        if (value <= 0) {
+            return;
+        }
 
-        updateCargoGeometry(selectedCargo);
+
+        selectedCargo.width =
+            value;
+
+
+        updateCargoGeometry(
+            selectedCargo
+        );
+
 
         renderCargoList();
 
@@ -513,15 +673,27 @@ document.getElementById(
     'change',
     function () {
 
-        if (!selectedCargo) return;
+        if (!selectedCargo) {
+            return;
+        }
 
-        const value = Number(this.value);
+        const value =
+            Number(this.value);
 
-        if (value <= 0) return;
 
-        selectedCargo.height = value;
+        if (value <= 0) {
+            return;
+        }
 
-        updateCargoGeometry(selectedCargo);
+
+        selectedCargo.height =
+            value;
+
+
+        updateCargoGeometry(
+            selectedCargo
+        );
+
 
         renderCargoList();
 
@@ -535,13 +707,22 @@ document.getElementById(
     'change',
     function () {
 
-        if (!selectedCargo) return;
+        if (!selectedCargo) {
+            return;
+        }
 
-        const value = Number(this.value);
+        const value =
+            Number(this.value);
 
-        if (value < 0) return;
 
-        selectedCargo.weight = value;
+        if (value < 0) {
+            return;
+        }
+
+
+        selectedCargo.weight =
+            value;
+
 
         renderCargoList();
 
@@ -555,7 +736,9 @@ document.getElementById(
     'change',
     function () {
 
-        if (!selectedCargo) return;
+        if (!selectedCargo) {
+            return;
+        }
 
         selectedCargo.canStack =
             this.checked;
@@ -570,7 +753,9 @@ document.getElementById(
     'change',
     function () {
 
-        if (!selectedCargo) return;
+        if (!selectedCargo) {
+            return;
+        }
 
         selectedCargo.canRotate =
             this.checked;
@@ -589,7 +774,10 @@ document.getElementById(
     'click',
     function () {
 
-        if (!selectedCargo) return;
+        if (!selectedCargo) {
+            return;
+        }
+
 
         if (!selectedCargo.canRotate) {
 
@@ -598,14 +786,6 @@ document.getElementById(
             );
 
             return;
-        }
-
-
-        selectedCargo.rotation += 90;
-
-
-        if (selectedCargo.rotation >= 360) {
-            selectedCargo.rotation = 0;
         }
 
 
@@ -621,14 +801,25 @@ document.getElementById(
             oldLength;
 
 
+        selectedCargo.rotation +=
+            90;
+
+
+        if (
+            selectedCargo.rotation >= 360
+        ) {
+
+            selectedCargo.rotation = 0;
+
+        }
+
+
         updateCargoGeometry(
             selectedCargo
         );
 
 
-        selectCargo(
-            selectedCargo
-        );
+        renderCargoList();
 
     }
 );
@@ -644,11 +835,15 @@ document.getElementById(
     'click',
     function () {
 
-        if (!selectedCargo) return;
+        if (!selectedCargo) {
+            return;
+        }
 
 
         const index =
-            cargoes.indexOf(selectedCargo);
+            cargoes.indexOf(
+                selectedCargo
+            );
 
 
         if (index !== -1) {
@@ -674,9 +869,12 @@ document.getElementById(
         selectedCargo = null;
 
 
-        document.getElementById(
-            'cargoProperties'
-        ).classList.add('hidden');
+        document
+            .getElementById(
+                'cargoProperties'
+            )
+            .classList
+            .add('hidden');
 
 
         renderCargoList();
@@ -695,40 +893,1231 @@ document.getElementById(
     'click',
     function () {
 
-        const color =
-            cargoColors[
-                cargoes.length %
-                cargoColors.length
-            ];
+        const cargo =
+            createCargo(
+                120,
+                80,
+                60,
+                500
+            );
 
 
-        createCargo(
-            3,
-            2,
-            2,
-            color,
-            `Груз ${cargoCounter + 1}`
-        );
+        cargo.name =
+            `Груз ${cargo.id}`;
+
+
+        renderCargoList();
+
+        selectCargo(cargo);
 
     }
 );
 
 
 // ======================================================
-// INITIAL CARGO
+// DEMO CARGO
 // ======================================================
 
 createCargo(
-    4,
-    2,
-    2,
+    120,
+    80,
+    60,
+    500,
     0xff6600,
     'Коробка 1'
 );
 
 
+createCargo(
+    100,
+    100,
+    80,
+    700,
+    0x22c55e,
+    'Коробка 2'
+);
+
+
+createCargo(
+    200,
+    120,
+    100,
+    1000,
+    0x3b82f6,
+    'Коробка 3'
+);
+
+
+renderCargoList();
+
+selectCargo(
+    cargoes[0]
+);
+
+
 // ======================================================
-// RAYCASTER
+// AUTO PACK BUTTON
+// ======================================================
+
+const autoPackButton =
+    document.createElement(
+        'button'
+    );
+
+
+autoPackButton.textContent =
+    '🚚 Автозагрузка';
+
+
+autoPackButton.style.marginLeft =
+    '10px';
+
+
+document
+    .querySelector('.header')
+    .appendChild(
+        autoPackButton
+    );
+
+
+autoPackButton.addEventListener(
+    'click',
+    autoPack
+);
+
+
+// ======================================================
+// CLEAR PACKING
+// ======================================================
+
+function clearPacking() {
+
+    for (
+        const cargo of cargoes
+    ) {
+
+        cargo.mesh.position.set(
+            0,
+            floorThickness +
+            cargo.height / 2,
+            0
+        );
+
+        cargo.rotation = 0;
+
+        cargo.packed = true;
+
+    }
+
+}
+
+
+// ======================================================
+// AUTO PACK
+// ======================================================
+
+// ======================================================
+// AUTO PACKING
+// ======================================================
+
+function autoPack() {
+
+    // ------------------------------------------
+    // Сбрасываем позиции
+    // ------------------------------------------
+
+    for (const cargo of cargoes) {
+
+        cargo.packed = false;
+
+        cargo.mesh.position.set(
+            0,
+            floorThickness + cargo.height / 2,
+            0
+        );
+
+    }
+
+
+    // ------------------------------------------
+    // Сначала самые большие и тяжёлые грузы
+    // ------------------------------------------
+
+    const sortedCargoes = [...cargoes].sort(
+        (a, b) => {
+
+            const volumeA =
+                a.length *
+                a.width *
+                a.height;
+
+            const volumeB =
+                b.length *
+                b.width *
+                b.height;
+
+
+            // Сначала объём
+            if (volumeA !== volumeB) {
+                return volumeB - volumeA;
+            }
+
+
+            // При одинаковом объёме
+            // сначала более тяжёлый
+            return b.weight - a.weight;
+
+        }
+    );
+
+
+    // ------------------------------------------
+    // Загружаем по одному
+    // ------------------------------------------
+
+    for (const cargo of sortedCargoes) {
+
+        const placement =
+            findBestCargoPlacement(
+                cargo
+            );
+
+
+        if (!placement) {
+
+            cargo.packed = false;
+
+            continue;
+
+        }
+
+
+        applyPlacement(
+            cargo,
+            placement
+        );
+
+    }
+
+
+    renderCargoList();
+
+
+    if (cargoes.length > 0) {
+
+        selectCargo(
+            cargoes[0]
+        );
+
+    }
+
+
+    console.log(
+        'Автозагрузка завершена'
+    );
+
+}
+
+
+// ======================================================
+// FIND BEST POSITION
+// ======================================================
+
+function findBestCargoPlacement(cargo) {
+
+    const orientations =
+        getCargoOrientations(cargo);
+
+    let bestPlacement = null;
+
+    for (
+        const orientation
+        of orientations
+    ) {
+
+        const candidates =
+            generatePlacementCandidates(
+                cargo,
+                cargoes,
+                orientation
+            );
+
+        for (
+            const candidate
+            of candidates
+        ) {
+
+            if (
+                !isInsideTruck(
+                    candidate
+                )
+            ) {
+
+                continue;
+
+            }
+
+            if (
+                placementCollides(
+                    cargo,
+                    candidate
+                )
+            ) {
+
+                continue;
+
+            }
+
+            const support =
+                calculateSupport(
+                    cargo,
+                    candidate
+                );
+
+            if (
+                candidate.y >
+                floorThickness + 0.1
+            ) {
+
+                if (
+                    !support.valid
+                ) {
+
+                    continue;
+
+                }
+
+            }
+
+            candidate.supportPercent =
+                support.percent;
+
+            candidate.score =
+                calculatePlacementScore(
+                    candidate,
+                    cargo
+                );
+
+            if (
+                bestPlacement === null ||
+                candidate.score <
+                bestPlacement.score
+            ) {
+
+                bestPlacement =
+                    candidate;
+
+            }
+
+        }
+
+    }
+
+    return bestPlacement;
+
+}
+
+
+// ======================================================
+// ORIENTATIONS
+// ======================================================
+
+function getCargoOrientations(cargo) {
+
+    const orientations = [];
+
+
+    orientations.push({
+
+        length:
+            cargo.length,
+
+        width:
+            cargo.width,
+
+        height:
+            cargo.height,
+
+        rotation: 0
+
+    });
+
+
+    if (
+        cargo.canRotate &&
+        cargo.length !== cargo.width
+    ) {
+
+        orientations.push({
+
+            length:
+                cargo.width,
+
+            width:
+                cargo.length,
+
+            height:
+                cargo.height,
+
+            rotation: 90
+
+        });
+
+    }
+
+
+    return orientations;
+
+}
+
+
+// ======================================================
+// GENERATE CANDIDATE POSITIONS
+// ======================================================
+
+function generatePlacementCandidates(
+    cargo,
+    cargos,
+    orientation
+) {
+
+    const candidates = [];
+
+    const length =
+        orientation.length;
+
+    const width =
+        orientation.width;
+
+    const height =
+        orientation.height;
+
+
+    // ==================================================
+    // 1. ПЕРВАЯ ПОЗИЦИЯ НА ПОЛУ
+    // ==================================================
+
+    const startX =
+        -truck.length / 2 +
+        length / 2 +
+        cargoGap;
+
+
+    /*
+     * Сначала пытаемся поставить
+     * прямо у передней стенки.
+     */
+
+    addCandidate(
+        candidates,
+        startX,
+        floorThickness,
+        0,
+        orientation
+    );
+
+
+    /*
+     * Затем слева и справа.
+     */
+
+    const zOffset =
+        (truck.width - width) / 2 -
+        cargoGap;
+
+
+    if (zOffset > 0) {
+
+        addCandidate(
+            candidates,
+            startX,
+            floorThickness,
+            -zOffset,
+            orientation
+        );
+
+        addCandidate(
+            candidates,
+            startX,
+            floorThickness,
+            zOffset,
+            orientation
+        );
+
+    }
+
+
+    // ==================================================
+    // 2. СТРОИМ СЛЕДУЮЩИЕ ПОЗИЦИИ НА ПОЛУ
+    // ==================================================
+
+    for (
+        const base of cargos
+    ) {
+
+        if (
+            base === cargo ||
+            !base.packed
+        ) {
+
+            continue;
+
+        }
+
+
+        /*
+         * Правая граница груза.
+         *
+         * Именно здесь можно поставить
+         * следующий груз.
+         */
+
+        const nextX =
+            base.mesh.position.x +
+            base.length / 2 +
+            length / 2 +
+            cargoGap;
+
+
+        if (
+            nextX <=
+            truck.length / 2
+        ) {
+
+            addCandidate(
+                candidates,
+                nextX,
+                floorThickness,
+                base.mesh.position.z,
+                orientation
+            );
+
+        }
+
+
+        /*
+         * Также пробуем позиции
+         * рядом по ширине.
+         */
+
+        const nextZ =
+            base.mesh.position.z +
+            base.width / 2 +
+            width / 2 +
+            cargoGap;
+
+
+        if (
+            nextZ <=
+            truck.width / 2
+        ) {
+
+            addCandidate(
+                candidates,
+                base.mesh.position.x,
+                floorThickness,
+                nextZ,
+                orientation
+            );
+
+        }
+
+
+        const previousZ =
+            base.mesh.position.z -
+            base.width / 2 -
+            width / 2 -
+            cargoGap;
+
+
+        if (
+            previousZ >=
+            -truck.width / 2
+        ) {
+
+            addCandidate(
+                candidates,
+                base.mesh.position.x,
+                floorThickness,
+                previousZ,
+                orientation
+            );
+
+        }
+
+    }
+
+
+    // ==================================================
+    // 3. СТАВИМ СВЕРХУ
+    // ==================================================
+
+    for (
+        const base of cargos
+    ) {
+
+        if (
+            base === cargo ||
+            !base.packed
+        ) {
+
+            continue;
+
+        }
+
+
+        if (
+            !base.canStack
+        ) {
+
+            continue;
+
+        }
+
+
+        const baseTop =
+            base.mesh.position.y +
+            base.height / 2;
+
+
+        /*
+         * Ставим по центру существующего груза.
+         */
+
+        addCandidate(
+            candidates,
+            base.mesh.position.x,
+            baseTop,
+            base.mesh.position.z,
+            orientation
+        );
+
+
+        /*
+         * И несколько вариантов
+         * по X/Z.
+         */
+
+        const positions = [
+
+            {
+                x:
+                    base.mesh.position.x -
+                    base.length / 2 +
+                    length / 2,
+
+                z:
+                    base.mesh.position.z
+            },
+
+            {
+                x:
+                    base.mesh.position.x +
+                    base.length / 2 -
+                    length / 2,
+
+                z:
+                    base.mesh.position.z
+            },
+
+            {
+                x:
+                    base.mesh.position.x,
+
+                z:
+                    base.mesh.position.z -
+                    base.width / 2 +
+                    width / 2
+            },
+
+            {
+                x:
+                    base.mesh.position.x,
+
+                z:
+                    base.mesh.position.z +
+                    base.width / 2 -
+                    width / 2
+            }
+
+        ];
+
+
+        for (
+            const position of positions
+        ) {
+
+            addCandidate(
+                candidates,
+                position.x,
+                baseTop,
+                position.z,
+                orientation
+            );
+
+        }
+
+    }
+
+
+    return removeDuplicateCandidates(
+        candidates
+    );
+
+}
+
+
+// ======================================================
+// ADD CANDIDATE
+// ======================================================
+
+function addCandidate(
+    candidates,
+    x,
+    y,
+    z,
+    orientation
+) {
+
+    candidates.push({
+
+        x: x,
+
+        y: y,
+
+        z: z,
+
+        length:
+            orientation.length,
+
+        width:
+            orientation.width,
+
+        height:
+            orientation.height,
+
+        rotation:
+            orientation.rotation
+
+    });
+
+}
+
+
+// ======================================================
+// TRUCK BOUNDS
+// ======================================================
+
+function isInsideTruck(
+    placement
+) {
+
+    const left =
+        placement.x -
+        placement.length / 2;
+
+
+    const right =
+        placement.x +
+        placement.length / 2;
+
+
+    const back =
+        placement.z -
+        placement.width / 2;
+
+
+    const front =
+        placement.z +
+        placement.width / 2;
+
+
+    const top =
+        placement.y +
+        placement.height;
+
+
+    return (
+
+        left >=
+        -truck.length / 2
+
+        &&
+
+        right <=
+        truck.length / 2
+
+        &&
+
+        back >=
+        -truck.width / 2
+
+        &&
+
+        front <=
+        truck.width / 2
+
+        &&
+
+        top <=
+        truck.height
+
+    );
+
+}
+
+
+// ======================================================
+// COLLISION
+// ======================================================
+
+function placementCollides(
+    cargo,
+    placement
+) {
+
+    const aLeft =
+        placement.x -
+        placement.length / 2;
+
+    const aRight =
+        placement.x +
+        placement.length / 2;
+
+
+    const aBack =
+        placement.z -
+        placement.width / 2;
+
+    const aFront =
+        placement.z +
+        placement.width / 2;
+
+
+    const aBottom =
+        placement.y;
+
+    const aTop =
+        placement.y +
+        placement.height;
+
+
+    for (
+        const other
+        of cargoes
+    ) {
+
+        if (
+            other === cargo ||
+            !other.packed
+        ) {
+
+            continue;
+
+        }
+
+
+        const bLeft =
+            other.mesh.position.x -
+            other.length / 2;
+
+        const bRight =
+            other.mesh.position.x +
+            other.length / 2;
+
+
+        const bBack =
+            other.mesh.position.z -
+            other.width / 2;
+
+        const bFront =
+            other.mesh.position.z +
+            other.width / 2;
+
+
+        const bBottom =
+            other.mesh.position.y -
+            other.height / 2;
+
+        const bTop =
+            other.mesh.position.y +
+            other.height / 2;
+
+
+        const overlapX =
+            aLeft <
+            bRight &&
+            aRight >
+            bLeft;
+
+
+        const overlapZ =
+            aBack <
+            bFront &&
+            aFront >
+            bBack;
+
+
+        const overlapY =
+            aBottom <
+            bTop &&
+            aTop >
+            bBottom;
+
+
+        if (
+            overlapX &&
+            overlapY &&
+            overlapZ
+        ) {
+
+            return true;
+
+        }
+
+    }
+
+
+    return false;
+
+}
+
+
+// ======================================================
+// SUPPORT CALCULATION
+// ======================================================
+
+function calculateSupport(
+    cargo,
+    placement
+) {
+
+    // Груз стоит на полу
+
+    if (
+        Math.abs(
+            placement.y -
+            floorThickness
+        ) < 0.1
+    ) {
+
+        return {
+
+            valid: true,
+
+            percent: 1
+
+        };
+
+    }
+
+
+    const left =
+        placement.x -
+        placement.length / 2;
+
+    const right =
+        placement.x +
+        placement.length / 2;
+
+
+    const back =
+        placement.z -
+        placement.width / 2;
+
+    const front =
+        placement.z +
+        placement.width / 2;
+
+
+    let supportedArea = 0;
+
+
+    for (
+        const support
+        of cargoes
+    ) {
+
+        if (
+            support === cargo ||
+            !support.packed
+        ) {
+
+            continue;
+
+        }
+
+
+        if (
+            !support.canStack
+        ) {
+
+            continue;
+
+        }
+
+
+        const supportTop =
+            support.mesh.position.y +
+            support.height / 2;
+
+
+        // Должен быть непосредственно сверху
+
+        if (
+            Math.abs(
+                supportTop -
+                placement.y
+            ) > 2
+        ) {
+
+            continue;
+
+        }
+
+
+        const supportLeft =
+            support.mesh.position.x -
+            support.length / 2;
+
+
+        const supportRight =
+            support.mesh.position.x +
+            support.length / 2;
+
+
+        const supportBack =
+            support.mesh.position.z -
+            support.width / 2;
+
+
+        const supportFront =
+            support.mesh.position.z +
+            support.width / 2;
+
+
+        const overlapX =
+            Math.max(
+
+                0,
+
+                Math.min(
+                    right,
+                    supportRight
+                )
+                -
+                Math.max(
+                    left,
+                    supportLeft
+                )
+
+            );
+
+
+        const overlapZ =
+            Math.max(
+
+                0,
+
+                Math.min(
+                    front,
+                    supportFront
+                )
+                -
+                Math.max(
+                    back,
+                    supportBack
+                )
+
+            );
+
+
+        supportedArea +=
+            overlapX *
+            overlapZ;
+
+    }
+
+
+    const cargoArea =
+        placement.length *
+        placement.width;
+
+
+    const percent =
+        supportedArea /
+        cargoArea;
+
+
+    return {
+
+        valid:
+            percent >= 0.6,
+
+        percent
+
+    };
+
+}
+
+
+// ======================================================
+// PLACEMENT SCORE
+// ======================================================
+
+function calculatePlacementScore(placement, cargo) {
+    /*
+     * Главный принцип:
+     * груз должен располагаться как можно ближе к началу кузова.
+     *
+     * X = длина машины.
+     * Чем меньше X, тем ближе груз к передней части.
+     */
+
+    const frontPenalty = placement.x * 100000;
+
+    /*
+     * Небольшой штраф за смещение по ширине.
+     * Сначала стараемся укладывать ближе к центру ширины,
+     * чтобы ряд получался компактным.
+     */
+    const widthPenalty = Math.abs(placement.z) * 10;
+
+    /*
+     * Высота имеет меньший приоритет, чем положение по X.
+     * Но между двумя вариантами с одинаковым X
+     * предпочтительнее более низкий.
+     */
+    const heightPenalty = placement.y * 100;
+
+    /*
+     * Если груз стоит сверху другого груза,
+     * это хорошо: не занимаем новое место по полу.
+     */
+    const stackingBonus = placement.y > 0 ? -5000 : 0;
+
+    return (
+        frontPenalty +
+        widthPenalty +
+        heightPenalty +
+        stackingBonus
+    );
+}
+
+
+// ======================================================
+// APPLY PLACEMENT
+// ======================================================
+
+function applyPlacement(
+    cargo,
+    placement
+) {
+
+    cargo.length =
+        placement.length;
+
+    cargo.width =
+        placement.width;
+
+    cargo.height =
+        placement.height;
+
+
+    cargo.rotation =
+        placement.rotation;
+
+
+    cargo.mesh.position.set(
+
+        placement.x,
+
+        placement.y +
+        placement.height / 2,
+
+        placement.z
+
+    );
+
+
+    cargo.packed =
+        true;
+
+
+    updateCargoGeometry(
+        cargo
+    );
+
+}
+
+
+// ======================================================
+// REMOVE DUPLICATE CANDIDATES
+// ======================================================
+
+function removeDuplicateCandidates(
+    candidates
+) {
+
+    const result = [];
+
+    const keys =
+        new Set();
+
+
+    for (
+        const candidate
+        of candidates
+    ) {
+
+        const key = [
+
+            Math.round(
+                candidate.x
+            ),
+
+            Math.round(
+                candidate.y
+            ),
+
+            Math.round(
+                candidate.z
+            ),
+
+            candidate.length,
+
+            candidate.width,
+
+            candidate.rotation
+
+        ].join('|');
+
+
+        if (
+            keys.has(key)
+        ) {
+
+            continue;
+
+        }
+
+
+        keys.add(key);
+
+        result.push(
+            candidate
+        );
+
+    }
+
+
+    return result;
+
+}
+
+
+// ======================================================
+// DRAGGING
 // ======================================================
 
 const raycaster =
@@ -738,32 +2127,32 @@ const mouse =
     new THREE.Vector2();
 
 
-// ======================================================
-// DRAG PLANE
-// ======================================================
-
 const dragPlane =
     new THREE.Plane(
-        new THREE.Vector3(0, 1, 0),
-        -0.15
+        new THREE.Vector3(
+            0,
+            1,
+            0
+        ),
+        -floorThickness
     );
 
 
-// ======================================================
-// POINTER DOWN
-// ======================================================
-
 renderer.domElement.addEventListener(
     'pointerdown',
-    function (event) {
+    event => {
 
         const rect =
-            renderer.domElement.getBoundingClientRect();
+            renderer.domElement
+                .getBoundingClientRect();
 
 
         mouse.x =
             (
-                (event.clientX - rect.left)
+                (
+                    event.clientX -
+                    rect.left
+                )
                 /
                 rect.width
             ) * 2 - 1;
@@ -771,7 +2160,10 @@ renderer.domElement.addEventListener(
 
         mouse.y =
             -(
-                (event.clientY - rect.top)
+                (
+                    event.clientY -
+                    rect.top
+                )
                 /
                 rect.height
             ) * 2 + 1;
@@ -785,11 +2177,16 @@ renderer.domElement.addEventListener(
 
         const intersections =
             raycaster.intersectObjects(
-                cargoes.map(c => c.mesh)
+                cargoes.map(
+                    cargo =>
+                        cargo.mesh
+                )
             );
 
 
-        if (intersections.length === 0) {
+        if (
+            intersections.length === 0
+        ) {
             return;
         }
 
@@ -812,7 +2209,8 @@ renderer.domElement.addEventListener(
         );
 
 
-        controls.enabled = false;
+        controls.enabled =
+            false;
 
 
         const point =
@@ -834,26 +2232,29 @@ renderer.domElement.addEventListener(
 );
 
 
-// ======================================================
-// POINTER MOVE
-// ======================================================
-
 renderer.domElement.addEventListener(
     'pointermove',
-    function (event) {
+    event => {
 
-        if (!dragging || !selectedCargo) {
+        if (
+            !dragging ||
+            !selectedCargo
+        ) {
             return;
         }
 
 
         const rect =
-            renderer.domElement.getBoundingClientRect();
+            renderer.domElement
+                .getBoundingClientRect();
 
 
         mouse.x =
             (
-                (event.clientX - rect.left)
+                (
+                    event.clientX -
+                    rect.left
+                )
                 /
                 rect.width
             ) * 2 - 1;
@@ -861,7 +2262,10 @@ renderer.domElement.addEventListener(
 
         mouse.y =
             -(
-                (event.clientY - rect.top)
+                (
+                    event.clientY -
+                    rect.top
+                )
                 /
                 rect.height
             ) * 2 + 1;
@@ -897,63 +2301,60 @@ renderer.domElement.addEventListener(
             selectedCargo;
 
 
-        // ----------------------------------
-        // BOUNDS
-        // ----------------------------------
-
         const halfLength =
             cargo.length / 2;
-
 
         const halfWidth =
             cargo.width / 2;
 
 
-        x = Math.max(
-            -truckLength / 2 + halfLength,
-            Math.min(
-                truckLength / 2 - halfLength,
-                x
-            )
-        );
+        x =
+            Math.max(
+                -truck.length / 2 +
+                halfLength,
+
+                Math.min(
+                    truck.length / 2 -
+                    halfLength,
+
+                    x
+                )
+            );
 
 
-        z = Math.max(
-            -truckWidth / 2 + halfWidth,
-            Math.min(
-                truckWidth / 2 - halfWidth,
+        z =
+            Math.max(
+                -truck.width / 2 +
+                halfWidth,
+
+                Math.min(
+                    truck.width / 2 -
+                    halfWidth,
+
+                    z
+                )
+            );
+
+
+        const y =
+            calculateManualHeight(
+                cargo,
+                x,
                 z
-            )
-        );
+            );
 
 
-        // ----------------------------------
-        // HEIGHT
-        // ----------------------------------
+        const newPosition =
+            new THREE.Vector3(
+                x,
+                y +
+                cargo.height / 2,
+                z
+            );
 
-        const supportHeight =
-    calculateHeight(
-        cargo,
-        x,
-        z
-    );
-
-
-const newPosition =
-    new THREE.Vector3(
-        x,
-        supportHeight +
-        cargo.height / 2,
-        z
-    );
-
-
-        // ----------------------------------
-        // COLLISION
-        // ----------------------------------
 
         if (
-            intersectsCargo(
+            intersectsManual(
                 cargo,
                 newPosition
             )
@@ -972,15 +2373,9 @@ const newPosition =
             newPosition
         );
 
-        cargo.mesh.position.x =
-    Math.round(
-        cargo.mesh.position.x * 10
-    ) / 10;
 
-cargo.mesh.position.z =
-    Math.round(
-        cargo.mesh.position.z * 10
-    ) / 10;
+        cargo.packed =
+            true;
 
 
         lastValidPosition.copy(
@@ -991,13 +2386,9 @@ cargo.mesh.position.z =
 );
 
 
-// ======================================================
-// POINTER UP
-// ======================================================
-
 renderer.domElement.addEventListener(
     'pointerup',
-    function () {
+    () => {
 
         dragging = false;
 
@@ -1008,299 +2399,107 @@ renderer.domElement.addEventListener(
 
 
 // ======================================================
-// CALCULATE HEIGHT
+// MANUAL HEIGHT
 // ======================================================
 
-function calculateHeight(cargo, x, z) {
-
-    const groundHeight = 0.15;
-
-    let bestHeight = groundHeight;
-
-    const cargoHalfLength = cargo.length / 2;
-    const cargoHalfWidth = cargo.width / 2;
-
-    const cargoLeft = x - cargoHalfLength;
-    const cargoRight = x + cargoHalfLength;
-
-    const cargoFront = z - cargoHalfWidth;
-    const cargoBack = z + cargoHalfWidth;
-
-
-    for (const support of cargoes) {
-
-        if (support === cargo) {
-            continue;
-        }
-
-        // ----------------------------------
-        // Нельзя ставить на этот груз
-        // ----------------------------------
-
-        if (!support.canStack) {
-            continue;
-        }
-
-
-        const supportLeft =
-            support.mesh.position.x -
-            support.length / 2;
-
-        const supportRight =
-            support.mesh.position.x +
-            support.length / 2;
-
-        const supportFront =
-            support.mesh.position.z -
-            support.width / 2;
-
-        const supportBack =
-            support.mesh.position.z +
-            support.width / 2;
-
-
-        // ----------------------------------
-        // Пересечение площадей сверху
-        // ----------------------------------
-
-        const overlapX =
-            Math.max(
-                0,
-                Math.min(
-                    cargoRight,
-                    supportRight
-                ) -
-                Math.max(
-                    cargoLeft,
-                    supportLeft
-                )
-            );
-
-
-        const overlapZ =
-            Math.max(
-                0,
-                Math.min(
-                    cargoBack,
-                    supportBack
-                ) -
-                Math.max(
-                    cargoFront,
-                    supportFront
-                )
-            );
-
-
-        const overlapArea =
-            overlapX * overlapZ;
-
-
-        if (overlapArea <= 0) {
-            continue;
-        }
-
-
-        // ----------------------------------
-        // Площадь основания груза
-        // ----------------------------------
-
-        const cargoArea =
-            cargo.length *
-            cargo.width;
-
-
-        const supportPercentage =
-            overlapArea /
-            cargoArea;
-
-
-        // Минимум 60% площади должно
-        // находиться над опорой
-        if (supportPercentage < 0.6) {
-            continue;
-        }
-
-
-        // ----------------------------------
-        // Верхняя точка опоры
-        // ----------------------------------
-
-        const supportTop =
-            support.mesh.position.y +
-            support.height / 2;
-
-
-        if (supportTop > bestHeight) {
-            bestHeight = supportTop;
-        }
-
-    }
-
-
-    return bestHeight;
-}
-
-function hasSupport(
+function calculateManualHeight(
     cargo,
     x,
-    z,
-    height
+    z
 ) {
 
-    const cargoHalfLength =
-        cargo.length / 2;
-
-    const cargoHalfWidth =
-        cargo.width / 2;
+    let height =
+        floorThickness;
 
 
-    const cargoLeft =
-        x - cargoHalfLength;
-
-    const cargoRight =
-        x + cargoHalfLength;
-
-    const cargoFront =
-        z - cargoHalfWidth;
-
-    const cargoBack =
-        z + cargoHalfWidth;
-
-
-    // Если груз стоит на полу
-    if (
-        Math.abs(height - 0.15) < 0.01
+    for (
+        const support of cargoes
     ) {
-        return true;
-    }
-
-
-    let supportedArea = 0;
-
-
-    for (const support of cargoes) {
-
-        if (support === cargo) {
-            continue;
-        }
-
-
-        if (!support.canStack) {
-            continue;
-        }
-
-
-        const supportTop =
-            support.mesh.position.y +
-            support.height / 2;
-
-
-        // Груз должен находиться
-        // непосредственно над опорой
 
         if (
-            Math.abs(
-                supportTop - height
-            ) > 0.01
+            support === cargo ||
+            !support.canStack
         ) {
             continue;
         }
 
 
-        const supportLeft =
-            support.mesh.position.x -
-            support.length / 2;
-
-        const supportRight =
-            support.mesh.position.x +
-            support.length / 2;
-
-        const supportFront =
-            support.mesh.position.z -
-            support.width / 2;
-
-        const supportBack =
-            support.mesh.position.z +
-            support.width / 2;
-
-
         const overlapX =
-            Math.max(
-                0,
-                Math.min(
-                    cargoRight,
-                    supportRight
-                ) -
-                Math.max(
-                    cargoLeft,
-                    supportLeft
-                )
+            Math.abs(
+                x -
+                support.mesh.position.x
+            )
+            <
+            (
+                cargo.length / 2 +
+                support.length / 2
             );
 
 
         const overlapZ =
-            Math.max(
-                0,
-                Math.min(
-                    cargoBack,
-                    supportBack
-                ) -
-                Math.max(
-                    cargoFront,
-                    supportFront
-                )
+            Math.abs(
+                z -
+                support.mesh.position.z
+            )
+            <
+            (
+                cargo.width / 2 +
+                support.width / 2
             );
 
 
-        supportedArea +=
-            overlapX * overlapZ;
+        if (
+            overlapX &&
+            overlapZ
+        ) {
+
+            const top =
+                support.mesh.position.y +
+                support.height / 2;
+
+
+            if (
+                top > height
+            ) {
+
+                height = top;
+
+            }
+
+        }
 
     }
 
 
-    const cargoArea =
-        cargo.length *
-        cargo.width;
-
-
-    return (
-        supportedArea /
-        cargoArea
-    ) >= 0.6;
+    return height;
 
 }
+
+
 // ======================================================
-// COLLISION
+// MANUAL COLLISION
 // ======================================================
 
-function intersectsCargo(
+function intersectsManual(
     cargo,
     position
 ) {
 
-    const aHalfLength =
-        cargo.length / 2;
-
-    const aHalfWidth =
-        cargo.width / 2;
-
-
     const aLeft =
         position.x -
-        aHalfLength;
+        cargo.length / 2;
 
     const aRight =
         position.x +
-        aHalfLength;
+        cargo.length / 2;
 
     const aFront =
         position.z -
-        aHalfWidth;
+        cargo.width / 2;
 
     const aBack =
         position.z +
-        aHalfWidth;
-
+        cargo.width / 2;
 
     const aBottom =
         position.y -
@@ -1311,36 +2510,32 @@ function intersectsCargo(
         cargo.height / 2;
 
 
-    for (const other of cargoes) {
+    for (
+        const other of cargoes
+    ) {
 
-        if (other === cargo) {
+        if (
+            other === cargo
+        ) {
             continue;
         }
 
 
-        const bHalfLength =
-            other.length / 2;
-
-        const bHalfWidth =
-            other.width / 2;
-
-
         const bLeft =
             other.mesh.position.x -
-            bHalfLength;
+            other.length / 2;
 
         const bRight =
             other.mesh.position.x +
-            bHalfLength;
+            other.length / 2;
 
         const bFront =
             other.mesh.position.z -
-            bHalfWidth;
+            other.width / 2;
 
         const bBack =
             other.mesh.position.z +
-            bHalfWidth;
-
+            other.width / 2;
 
         const bBottom =
             other.mesh.position.y -
@@ -1351,25 +2546,13 @@ function intersectsCargo(
             other.height / 2;
 
 
-        const overlapX =
-            aLeft < bRight &&
-            aRight > bLeft;
-
-
-        const overlapZ =
-            aFront < bBack &&
-            aBack > bFront;
-
-
-        const overlapY =
-            aBottom < bTop &&
-            aTop > bBottom;
-
-
         if (
-            overlapX &&
-            overlapZ &&
-            overlapY
+            aLeft < bRight &&
+            aRight > bLeft &&
+            aFront < bBack &&
+            aBack > bFront &&
+            aBottom < bTop &&
+            aTop > bBottom
         ) {
 
             return true;
@@ -1390,15 +2573,10 @@ function intersectsCargo(
 
 window.addEventListener(
     'resize',
-    function () {
-
-        const container =
-            document.getElementById('scene');
-
+    () => {
 
         const width =
             container.clientWidth;
-
 
         const height =
             container.clientHeight;
